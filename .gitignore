@@ -1,0 +1,19 @@
+# Binaries
+/ans2go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries and profiles
+*.test
+*.out
+*.prof
+
+# IDE and OS metadata
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
