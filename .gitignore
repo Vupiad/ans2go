@@ -10,6 +10,9 @@
 *.test
 *.out
 *.prof
+*.pcap
+scratch/
+.venv/
 
 # IDE and OS metadata
 .DS_Store

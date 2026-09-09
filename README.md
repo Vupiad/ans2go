@@ -330,11 +330,48 @@ go test -count=1 ./...
 
 ### Test Coverage Highlights
 - [`pkg/uper/uper_test.go`](file:///home/vupiad/pet-project/ans2go/pkg/uper/uper_test.go): BitWriter/BitReader, constrained integers, normally small numbers, Open Types, bit strings, alphabet-constrained strings.
+- [`pkg/uper/compliance_test.go`](file:///home/vupiad/pet-project/ans2go/pkg/uper/compliance_test.go): **Normative ITU-T X.691 Clause-by-Clause Verification** (§11.2 length determinants, §11.2 Open Type, §11.5 boundary integer constraints, §11.6 normally small numbers, §11.9 booleans, §14 bitstrings, §15 octetstrings, §26 permitted alphabet).
 - [`pkg/asn1/lexer/lexer_test.go`](file:///home/vupiad/pet-project/ans2go/pkg/asn1/lexer/lexer_test.go): Lexer verification on all `.asn` files.
 - [`pkg/asn1/parser/parser_test.go`](file:///home/vupiad/pet-project/ans2go/pkg/asn1/parser/parser_test.go): Parser verification across 20 modules.
 - [`pkg/asn1/analyzer/analyzer_test.go`](file:///home/vupiad/pet-project/ans2go/pkg/asn1/analyzer/analyzer_test.go): Constant folding and anonymous type lifting.
 - [`example/supl1/supl1_test.go`](file:///home/vupiad/pet-project/ans2go/example/supl1/supl1_test.go): End-to-end SUPL v1 & v2 roundtrip encoding and decoding (`SUPLINIT`, `SUPLSTART`, `SUPLEND`, extensions, choices).
+- [`example/supl1/golden_test.go`](file:///home/vupiad/pet-project/ans2go/example/supl1/golden_test.go): **Normative Specification Golden Vectors** (SUPLEND ProtocolError & Unspecified bit-for-bit exact identity).
+- [`example/supl1/pcap_test.go`](file:///home/vupiad/pet-project/ans2go/example/supl1/pcap_test.go): **Wireshark / tshark Packet Dissection Verification** (synthesizes PCAP for TCP port 7275).
 - [`example/ilp/ilp_test.go`](file:///home/vupiad/pet-project/ans2go/example/ilp/ilp_test.go): End-to-end ILP roundtrip encoding and decoding (`IPAddress`, `SessionID2`).
+
+---
+
+## Verifying Strict ITU-T X.691 (UPER) Compliance
+
+To prove that the encoder and decoder strictly follow the ITU-T X.691 standard format (beyond simple mutual roundtrip tests), four verification tiers are provided:
+
+### Tier 1: Normative X.691 Clause-by-Clause Bit Matrix
+Validates that bit counts, offsets, and bit-level representations strictly match ITU-T X.691 clauses:
+```bash
+go test -v -run TestX691 ./pkg/uper
+```
+
+### Tier 2: Published Standard Golden Vectors
+Verifies that real SUPL PDUs decode correctly from standard hex strings and re-encode to the exact same bytes bit-for-bit:
+```bash
+go test -v -run TestGolden ./example/supl1
+```
+
+### Tier 3: Differential Testing Against Python Reference Engine (`pycrate`)
+Cross-validates `ans2go` encoded bytes against `pycrate` (the standard Python ASN.1 UPER compiler and runtime used in telecom security):
+```bash
+python3 scripts/diff_test.py
+```
+This test asserts:
+- `pycrate.Decode(ans2go.Encode(PDU)) == PDU`
+- `pycrate.Encode(PDU) == ans2go.Encode(PDU)` (100% bit-for-bit exact match)
+
+### Tier 4: Wireshark / `tshark` Packet Dissector Validation
+Generates standard PCAP capture files (`supl_test.pcap`) and validates them using Wireshark's built-in UPER dissector (`packet-ulp.c`):
+```bash
+go test -v -run TestGenerateSUPLPcap ./example/supl1
+```
+Open `example/supl1/supl_test.pcap` in Wireshark to inspect the fully dissected ASN.1 tree with zero malformed packet warnings.
 
 ---
 
