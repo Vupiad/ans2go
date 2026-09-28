@@ -34,33 +34,15 @@ func (w *BitWriter) WriteConstrainedInt(val int64, lb int64, ub int64) error {
 	offset := uint64(val - lb)
 
 	if rangeVal == 1 {
-		// 0 bits
+		// 0 bits (ITU-T X.691 §10.5.3)
 		return nil
 	}
 
-	if rangeVal <= 65536 {
-		numBits := BitsNeeded(rangeVal)
-		w.WriteBits(offset, numBits)
-		return nil
-	}
-
-	// Range is greater than 64K (ITU-T X.691 §12.2.6)
-	maxOctets := OctetsNeeded(rangeVal)
-	// Determine minimum number of octets needed for the offset value
-	actualOctets := 1
-	for temp := offset >> 8; temp > 0; temp >>= 8 {
-		actualOctets++
-	}
-	if actualOctets > maxOctets {
-		actualOctets = maxOctets
-	}
-
-	// Encode length of octet string as constrained whole number in range [1, maxOctets]
-	lenBits := BitsNeeded(uint64(maxOctets))
-	w.WriteBits(uint64(actualOctets-1), lenBits)
-
-	// Encode offset as non-negative-binary-integer in actualOctets
-	w.WriteBits(offset, actualOctets*8)
+	// In the UNALIGNED variant (ITU-T X.691 §10.5.7(b)):
+	// The value shall be encoded as a bit-field of length 'b', where 'b' is the smallest
+	// number of bits such that 2^b >= rangeVal, with the length determinant omitted.
+	numBits := BitsNeeded(rangeVal)
+	w.WriteBits(offset, numBits)
 	return nil
 }
 
@@ -74,37 +56,13 @@ func (r *BitReader) ReadConstrainedInt(lb int64, ub int64) (int64, error) {
 		return lb, nil
 	}
 
-	if rangeVal <= 65536 {
-		numBits := BitsNeeded(rangeVal)
-		val, err := r.ReadBits(numBits)
-		if err != nil {
-			return 0, err
-		}
-		return int64(val) + lb, nil
-	}
-
-	// Range is greater than 64K (ITU-T X.691 §12.2.6)
-	maxOctets := OctetsNeeded(rangeVal)
-	lenBits := BitsNeeded(uint64(maxOctets))
-	lenOff, err := r.ReadBits(lenBits)
+	// In the UNALIGNED variant (ITU-T X.691 §10.5.7(b)):
+	numBits := BitsNeeded(rangeVal)
+	val, err := r.ReadBits(numBits)
 	if err != nil {
 		return 0, err
 	}
-	actualOctets := int(lenOff) + 1
-	if actualOctets > maxOctets {
-		return 0, fmt.Errorf("decoded octet count %d exceeds max %d", actualOctets, maxOctets)
-	}
-
-	offset, err := r.ReadBits(actualOctets * 8)
-	if err != nil {
-		return 0, err
-	}
-
-	res := int64(offset) + lb
-	if res > ub {
-		return 0, fmt.Errorf("decoded value %d exceeds upper bound %d", res, ub)
-	}
-	return res, nil
+	return int64(val) + lb, nil
 }
 
 // WriteNormallySmallNonNegativeWholeNumber encodes a normally small non-negative whole number (ITU-T X.691 §11.6).

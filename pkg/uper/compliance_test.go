@@ -168,19 +168,17 @@ func TestX691_Clause11_5_ConstrainedIntegers(t *testing.T) {
 		}
 	}
 
-	// 7. Range > 64K: (lb=0, ub=100000), rangeVal = 100001 (§11.5.7)
-	// maxOctets = 3. lenBits = BitsNeeded(3) = 2 bits.
-	// For value 500: offset=500 -> 2 octets (0x01F4).
-	// actualOctets=2 -> length encoded as actualOctets-1 = 1 (01b in 2 bits).
-	// offset encoded in 2*8 = 16 bits (00000001 11110100b).
-	// Total bits = 2 + 16 = 18 bits.
+	// 7. Range > 64K: (lb=0, ub=100000), rangeVal = 100001 (ITU-T X.691 §10.5.7(b) UNALIGNED)
+	// In the UNALIGNED variant, length determinant is omitted and the value is encoded as
+	// a bit-field of length ceil(log2(100001)) = 17 bits.
+	// For value 500: offset=500 in 17 bits.
 	{
 		w := uper.NewBitWriter()
 		if err := w.WriteConstrainedInt(500, 0, 100000); err != nil {
 			t.Fatalf("WriteConstrainedInt(500, 0, 100000) error: %v", err)
 		}
-		if w.BitsWritten() != 18 {
-			t.Fatalf("expected 18 bits for range > 64K, got %d", w.BitsWritten())
+		if w.BitsWritten() != 17 {
+			t.Fatalf("expected 17 bits for range > 64K in UPER, got %d", w.BitsWritten())
 		}
 		r := uper.NewBitReader(w.Bytes())
 		val, err := r.ReadConstrainedInt(0, 100000)

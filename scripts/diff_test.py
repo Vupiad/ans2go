@@ -106,6 +106,57 @@ def main():
                       v['sessionID']['slpSessionID']['slpId'][1] == 'slp.carrier.net' and
                       v['message'][1]['notification']['requestorId'] == b'EmergencyCenter'
         ),
+        (
+            "SUPL POS INIT (SETCapabilities, LocationId, RequestedAssistData, Position)",
+            "0000020000C0FA4048D159E24048D15B7AB6FBBD10B40E31D41A26DF7BAADC1CEAE4DA7009EFBF43C310204DC11E014D904006400C803206B26CC1CB270C593060C185A344AA206DB080BE009615557799BBDDFE0022",
+            lambda v: v['message'][0] == 'msSUPLPOSINIT' and
+                      v['message'][1]['sETCapabilities']['prefMethod'] == 'agpsSETassistedPreferred' and
+                      v['message'][1]['requestedAssistData']['navigationModelData']['gpsWeek'] == 1000 and
+                      v['message'][1]['locationId']['cellInfo'][1]['refMCC'] == 310 and
+                      v['message'][1]['position']['positionEstimate']['latitude'] == 4500000
+        ),
+        (
+            "SUPL POS (PosPayLoad RRLP, Horvel Velocity)",
+            "0000020000C0FA4048D159E24048D15B7AB6FBBD10B40E31D41A26DF7BAADC1CEAE514005010203040506080003200",
+            lambda v: v['message'][0] == 'msSUPLPOS' and
+                      v['message'][1]['posPayLoad'][0] == 'rrlpPayload' and
+                      v['message'][1]['posPayLoad'][1] == bytes([1, 2, 3, 4, 5, 6]) and
+                      v['message'][1]['velocity'][0] == 'horvel'
+        ),
+        (
+            "SUPL TRIGGERED START (AreaEventParams, SETCapabilities, LocationId)",
+            "0000020000C1F48261D950C84261D953B84488CD0EE31D41E77BACB2ADC1CEAE600858C9402006801400C80190404080C1014181C2007AB820003B02400000000E100000",
+            lambda v: v['message'][0] == 'msSUPLTRIGGEREDSTART' and
+                      v['message'][1]['triggerType'] == 'areaEvent' and
+                      v['message'][1]['triggerParams'][0] == 'areaEventParams' and
+                      v['message'][1]['triggerParams'][1]['areaEventType'] == 'enteringArea' and
+                      v['message'][1]['triggerParams'][1]['repeatedReportingParams']['minimumIntervalTime'] == 60
+        ),
+        (
+            "SUPL TRIGGERED RESPONSE (ReportingMode Batch, BatchRepConditions, GnssPosTechnology)",
+            "0000020000C1F48261D950C84261D953B84488CD0EE31D41E77BACB2ADC1CEAE6041822068008CB000",
+            lambda v: v['message'][0] == 'msSUPLTRIGGEREDRESPONSE' and
+                      v['message'][1]['posMethod'] == 'agpsSETassisted' and
+                      v['message'][1]['reportingMode']['repMode'] == 'batch' and
+                      v['message'][1]['reportingMode']['batchRepConditions'][0] == 'num-interval' and
+                      v['message'][1]['reportingMode']['batchRepConditions'][1] == 5 and
+                      v['message'][1]['gnssPosTechnology']['gps'] == True
+        ),
+        (
+            "SUPL REPORT (ReportDataList, PositionData, ResultCode, UTCTime Timestamp)",
+            "0000020000C1F48261D950C84261D953B84488CD0EE31D41E77BACB2ADC1CEAE618E170103E904C3B2A19084C3B2A000B403593660E593862C99B060C2D02546BE41C01D8041AC9B3072C9C3164CD83061695599DE2266AAEF3000",
+            lambda v: v['message'][0] == 'msSUPLREPORT' and
+                      len(v['message'][1]['reportDataList']) == 1 and
+                      v['message'][1]['reportDataList'][0]['positionData']['position']['positionEstimate']['latitude'] == 4885884 and
+                      v['message'][1]['reportDataList'][0]['resultCode'] == 'noposition' and
+                      v['message'][1]['reportDataList'][0]['timestamp'][0] == 'absoluteTime'
+        ),
+        (
+            "SUPL TRIGGERED STOP (StatusCode: ver2-sessionStopped)",
+            "0000020000C1F48261D950C84261D953B84488CD0EE31D41E77BACB2ADC1CEAE6080984000",
+            lambda v: v['message'][0] == 'msSUPLTRIGGEREDSTOP' and
+                      v['message'][1]['statusCode'] == 'ver2-sessionStopped'
+        ),
     ]
 
     all_passed = True
