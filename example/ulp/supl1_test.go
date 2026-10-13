@@ -1,4 +1,4 @@
-package supl1
+package ulp
 
 import (
 	"bytes"
@@ -21,8 +21,8 @@ func TestSuplInitRoundtrip(t *testing.T) {
 			SlpSessionID: &SlpSessionID{
 				SessionID: []byte{0xDE, 0xAD, 0xBE, 0xEF},
 				SlpId: SLPAddress{
-					Choice: SLPAddressChoice_FQDN,
-					FQDN:   ptr(FQDN("slp.carrier.net")),
+					Choice: SLPAddressChoice_Fqdn,
+					Fqdn:   ptr(FQDN("slp.carrier.net")),
 				},
 			},
 		},
@@ -59,8 +59,8 @@ func TestSuplInitRoundtrip(t *testing.T) {
 	if decoded.SessionID.SlpSessionID == nil || !bytes.Equal(decoded.SessionID.SlpSessionID.SessionID, []byte{0xDE, 0xAD, 0xBE, 0xEF}) {
 		t.Fatalf("slpSessionID mismatch")
 	}
-	if *decoded.SessionID.SlpSessionID.SlpId.FQDN != "slp.carrier.net" {
-		t.Fatalf("fqdn mismatch: %s", *decoded.SessionID.SlpSessionID.SlpId.FQDN)
+	if *decoded.SessionID.SlpSessionID.SlpId.Fqdn != "slp.carrier.net" {
+		t.Fatalf("fqdn mismatch: %s", *decoded.SessionID.SlpSessionID.SlpId.Fqdn)
 	}
 	if decoded.Message.Choice != UlpMessageChoice_MsSUPLINIT {
 		t.Fatalf("choice mismatch")
@@ -102,10 +102,10 @@ func TestSuplStartRoundtrip(t *testing.T) {
 						AgpsSETassisted: true,
 						AgpsSETBased:    false,
 						AutonomousGPS:   true,
-						AFLT:            false,
-						ECID:            false,
-						EOTD:            false,
-						OTDOA:           false,
+						Aflt:            false,
+						Ecid:            false,
+						Eotd:            false,
+						Otdoa:           false,
 					},
 					PrefMethod: PrefMethod_AgpsSETassistedPreferred,
 					PosProtocol: PosProtocol{
@@ -123,7 +123,7 @@ func TestSuplStartRoundtrip(t *testing.T) {
 							RefMNC: 1,
 							RefLAC: 1024,
 							RefCI:  2048,
-							TA:     ptr(int64(5)),
+							Ta:     ptr(int64(5)),
 						},
 					},
 				},
@@ -164,7 +164,7 @@ func TestSuplStartRoundtrip(t *testing.T) {
 	if gsm.RefMCC != 460 || gsm.RefMNC != 1 || gsm.RefLAC != 1024 || gsm.RefCI != 2048 {
 		t.Fatalf("gsm cell mismatch: %v", gsm)
 	}
-	if gsm.TA == nil || *gsm.TA != 5 {
+	if gsm.Ta == nil || *gsm.Ta != 5 {
 		t.Fatalf("gsm TA mismatch")
 	}
 }

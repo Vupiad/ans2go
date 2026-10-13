@@ -1,11 +1,11 @@
-package supl1_test
+package ulp_test
 
 import (
 	"bytes"
 	"encoding/hex"
 	"testing"
 
-	"ans2go/example/supl1"
+	"ans2go/example/ulp"
 )
 
 func ptr[T any](v T) *T {
@@ -48,24 +48,24 @@ func TestGolden_SUPLEND_ProtocolError(t *testing.T) {
 	}
 
 	// 1. Construct Go struct
-	pdu := supl1.ULPPDU{
+	pdu := ulp.ULPPDU{
 		Length: 12,
-		Version: supl1.Version{
+		Version: ulp.Version{
 			Maj:     2,
 			Min:     0,
 			Servind: 0,
 		},
-		SessionID: supl1.SessionID{},
-		Message: supl1.UlpMessage{
-			Choice: supl1.UlpMessageChoice_MsSUPLEND,
-			MsSUPLEND: &supl1.SUPLEND{
-				StatusCode: ptr(supl1.StatusCode_ProtocolError),
+		SessionID: ulp.SessionID{},
+		Message: ulp.UlpMessage{
+			Choice: ulp.UlpMessageChoice_MsSUPLEND,
+			MsSUPLEND: &ulp.SUPLEND{
+				StatusCode: ptr(ulp.StatusCode_ProtocolError),
 			},
 		},
 	}
 
 	// 2. Encode to UPER
-	encoded, err := supl1.Marshal(&pdu)
+	encoded, err := ulp.Marshal(&pdu)
 	if err != nil {
 		t.Fatalf("Marshal failed: %v", err)
 	}
@@ -75,8 +75,8 @@ func TestGolden_SUPLEND_ProtocolError(t *testing.T) {
 	}
 
 	// 3. Decode from golden hex
-	var decoded supl1.ULPPDU
-	if err := supl1.Unmarshal(expectedBytes, &decoded); err != nil {
+	var decoded ulp.ULPPDU
+	if err := ulp.Unmarshal(expectedBytes, &decoded); err != nil {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
 
@@ -87,13 +87,13 @@ func TestGolden_SUPLEND_ProtocolError(t *testing.T) {
 	if decoded.Version.Maj != 2 || decoded.Version.Min != 0 || decoded.Version.Servind != 0 {
 		t.Fatalf("unexpected version: %+v", decoded.Version)
 	}
-	if decoded.Message.Choice != supl1.UlpMessageChoice_MsSUPLEND {
+	if decoded.Message.Choice != ulp.UlpMessageChoice_MsSUPLEND {
 		t.Fatalf("unexpected message choice: %v", decoded.Message.Choice)
 	}
 	if decoded.Message.MsSUPLEND == nil || decoded.Message.MsSUPLEND.StatusCode == nil {
 		t.Fatalf("missing SUPLEND or StatusCode in decoded")
 	}
-	if *decoded.Message.MsSUPLEND.StatusCode != supl1.StatusCode_ProtocolError {
+	if *decoded.Message.MsSUPLEND.StatusCode != ulp.StatusCode_ProtocolError {
 		t.Fatalf("expected StatusCode_ProtocolError, got %v", *decoded.Message.MsSUPLEND.StatusCode)
 	}
 }
@@ -104,23 +104,23 @@ func TestGolden_SUPLEND_Unspecified(t *testing.T) {
 	expectedHex := "00080200001480"
 	expectedBytes, _ := hex.DecodeString(expectedHex)
 
-	pdu := supl1.ULPPDU{
+	pdu := ulp.ULPPDU{
 		Length: 8,
-		Version: supl1.Version{
+		Version: ulp.Version{
 			Maj:     2,
 			Min:     0,
 			Servind: 0,
 		},
-		SessionID: supl1.SessionID{},
-		Message: supl1.UlpMessage{
-			Choice: supl1.UlpMessageChoice_MsSUPLEND,
-			MsSUPLEND: &supl1.SUPLEND{
-				StatusCode: ptr(supl1.StatusCode_Unspecified),
+		SessionID: ulp.SessionID{},
+		Message: ulp.UlpMessage{
+			Choice: ulp.UlpMessageChoice_MsSUPLEND,
+			MsSUPLEND: &ulp.SUPLEND{
+				StatusCode: ptr(ulp.StatusCode_Unspecified),
 			},
 		},
 	}
 
-	encoded, err := supl1.Marshal(&pdu)
+	encoded, err := ulp.Marshal(&pdu)
 	if err != nil {
 		t.Fatalf("Marshal failed: %v", err)
 	}
@@ -129,11 +129,11 @@ func TestGolden_SUPLEND_Unspecified(t *testing.T) {
 		t.Fatalf("Golden vector mismatch:\n  got:  %X\n  want: %X", encoded, expectedBytes)
 	}
 
-	var decoded supl1.ULPPDU
-	if err := supl1.Unmarshal(expectedBytes, &decoded); err != nil {
+	var decoded ulp.ULPPDU
+	if err := ulp.Unmarshal(expectedBytes, &decoded); err != nil {
 		t.Fatalf("Unmarshal failed: %v", err)
 	}
-	if *decoded.Message.MsSUPLEND.StatusCode != supl1.StatusCode_Unspecified {
+	if *decoded.Message.MsSUPLEND.StatusCode != ulp.StatusCode_Unspecified {
 		t.Fatalf("expected StatusCode_Unspecified, got %v", *decoded.Message.MsSUPLEND.StatusCode)
 	}
 }
